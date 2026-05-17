@@ -1,30 +1,53 @@
-# Symulator QKD z wykorzystaniem protokołu BB84 oraz BBM92
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1aX3ddTcxR1mtZ0ziGCE7nBVGq5sxOoUY#scrollTo=0Taowo3f47d6)
+# Symulator Protokołów Dystrybucji Klucza Kwantowego (QKD) — BB84 & BBM92
 
-# Analiza Transpilacji i Kosztów Obwodów Kwantowych na IBM Quantum
-
-**Autor:** Grzegorz Ciapa  
-**Technologie:** Python, Qiskit SDK, IBM Quantum Platform (Hardware: `ibm_fez`)
+**Autor:** Grzegorz Ciapa 
+**Technologie:** Python 3, Qiskit, NumPy, Jupyter Notebook, Matplotlib  
 
 ## Cel Projektu
-Celem projektu było zbadanie "kosztu" uruchomienia algorytmu kwantowego w symulacji oraz na rzeczywistym sprzęcie IBM Quantum. Analiza skupia się na wpływie poziomów optymalizacji transpilera (Levels 0-3) na głębokość obwodu i liczbę bramek, weryfikując hipotezę, że najwyższy poziom optymalizacji nie zawsze gwarantuje najlepsze wyniki fizyczne.
+Celem projektu jest implementacja oraz analiza porównawcza symulatora warstwy kwantowej i klasycznej dla dwóch kluczowych protokołów dystrybucji klucza kwantowego:
+* **BB84** (protokół bazujący na przygotowaniu i pomiarze pojedynczych stanów fotonów),
+* **BBM92** (zaawansowany wariant oparty na zjawisku splątania kwantowego i generowaniu par stanów Bella – zadanie na ocenę celującą).
+
+Symulator pozwala na pełną rekonstrukcję fizycznych procesów nadawania, transformacji w kanale kwantowym, symulacji ingerencji osób trzecich (podsłuch Ewy przy użyciu różnych strategii) oraz klasycznego post-processingu (uzgadnianie baz, korekcja błędów i wzmocnienie prywatności).
 
 ## Metodyka
-Badania przeprowadzono na dwóch typach obwodów dla 5, 10 i 20 kubitów:
-1.  **Structured:** Obwody o uporządkowanej strukturze (niskie splątanie, łatwe mapowanie).
-2.  **Random:** Obwody losowe o wysokiej złożoności (wymagające intensywnego routingu/SWAP-ów).
+Projekt został zrealizowany w architekturze modułowej, odzwierciedlającej rzeczywiste etapy przetwarzania w fizycznych systemach QKD:
 
-## Wykorzystano metryki:
-* **Głębokość obwodu (Depth):** Czas trwania algorytmu.
-* **Liczba bramek 2-kubitowych:** Głównym źródło błędów w architekturze nadprzewodzącej.
-* **ESP (Estimated Success Probability):** Szacowana wierność wyniku w obecności szumu.
+1. **Sprzętowe Źródło Losowości (QRNG z pliku binarnego):**
+   * Zaimplementowano klasę `QRNGFileGenerator` działającą w oparciu o odczyt surowych plików binarnych (`QNGFile.dat` do `QNGFile10.dat`), które stanowią twardy zapis rzeczywistych pomiarów zjawisk stochastycznych.
+   * **Optymalizacja buforowania:** Dane pobierane są pakietami (1 bajt = 8 bitów danych kwantowych) do pamięci podręcznej RAM (`buffer`), a pojedyncze wartości wydzielane są przy użyciu szybkich operacji przesunięć bitowych i maskowania logicznego (`& 1`).
+   * **Zapobieganie determinizmowi:** Wprowadzono mechanizm losowego przesunięcia wskaźnika startowego (`seek`), dzięki czemu każde uruchomienie symulacji korzysta z innej puli unikalnych bitów kwantowych.
+
+2. **Przygotowanie i Kodowanie Stanów Kwantowych:**
+   * **BB84:** Kodowanie pojedynczych kubitów w oparciu o pobrane bity wartości i baz. Wykorzystanie bramki logicznej NOT (`X`) do zmiany stanu $|0\rangle \rightarrow |1\rangle$ oraz bramki Hadamarda (`H`) do transformacji bazy prostoliniowej (Z) w diagonalną (X).
+   * **BBM92 (*):** Symulacja niezależnego źródła par fotonów splątanych w stanie Bella $|\Phi^+\rangle = \frac{1}{\sqrt{2}}(|00\rangle + |11\rangle)$ przy użyciu bramek Hadamarda (`H`) oraz kontrolowanej negacji (`CNOT`). Kubity są dystrybuowane niezależnie do Alicji i Boba.
+
+3. **Kanał Kwantowy z Podsłuchem (Ewa):**
+   * Symulacja obecności aktywnego podsłuchiwacza przy użyciu strategii *Intercept-Resend* (Przechwyć-Wyślij Ponownie).
+   * Zaimplementowano dwa zróżnicowane modele ataków w celu zbadania ich wpływu na bezpieczeństwo przesyłu:
+     * **Atak interwałowy** (zastosowany w symulacji BB84),
+     * **Atak probabilistyczny** (zastosowany w symulacji BBM92).
+   * Intensywność podsłuchu Ewy była płynnie modyfikowana w zakresie od 0% do 100% przesyłanych fotonów.
+
+4. **Pomiar i Klasyczne Przetwarzanie Końcowe (Post-processing):**
+   * **Uzgadnianie baz (Sifting):** Publiczna wymiana informacji o użytych bazach pomiarowych i odrzucenie wyników nieskorelowanych.
+   * **Korekcja błędów (Information Reconciliation):** Klasyczna analiza parzystości bloków w celu eliminacji szumów tła.
+   * **Wzmocnienie prywatności (Privacy Amplification):** Symetryczne skracanie klucza za pomocą operacji logicznej XOR na sąsiednich parach bitów, sprowadzające wiedzę Ewy do poziomu asymptotycznie bliskiego zeru.
+
+## Wykorzystane Metryki
+Eksperymenty symulacyjne przeprowadzono w szerokim spektrum scenariuszy (zmienna intensywność podsłuchu od 0% do 100% z krokiem co 10%). Weryfikacji poddano następujące wskaźniki:
+* **QBER (Quantum Bit Error Rate):** Stosunek błędnych bitów do całkowitej długości klucza przesianego.
+* **Wiedza Ewy (Eve's Info / Leakage):** Statystyczny procentowy stopień dopasowania bitów poznanych przez Ewę do oryginalnego klucza.
+* **Długość klucza przesianego i końcowego:** Analiza wydajności ilościowej generowania bezpiecznego zasobu kryptograficznego po procesie skracania metodą XOR.
 
 ## Kluczowe Wnioski
-1.  **Paradoks Optymalizacji:** Dla obwodów losowych (Random) poziom optymalizacji 3 (Level 3) często generował **większą głębokość** niż Level 2 (np. 1774 vs 1632 dla 20 kubitów). Wynika to z "over-optimization" i agresywnej syntezy unitarnej niedopasowanej do topologii Heavy Hex.
-2.  **Struktura ma znaczenie:** Dla obwodów strukturalnych Level 3 działał poprawnie, redukując głębokość z 171 (Level 0) do 62 (Level 3).
-3.  **Realny Sprzęt (Hardware):** Rzeczywiste procesory (jak `ibm_fez`) narzucają duży narzut z powodu braku natywnej bramki CNOT (zastępowanej przez ECR) oraz ograniczonej łączności kubitów.
+* **Teoretyczna Granica Bezpieczeństwa (Próg Shora-Preskilla):** Symulacje jednoznacznie potwierdziły, że przekroczenie progu **~11% QBER** uniemożliwia efektywne odcięcie podsłuchiwacza za pomocą klasycznej korekcji. System automatycznie przerywa generowanie klucza przy wykryciu tej wartości anomalii.
+* **Charakterystyka Ataku Pełnego (100%):** Zarówno dla protokołu BB84 (Atak Interwałowy), jak i BBM92 (Atak Probabilistyczny), w scenariuszu pełnego podsłuchu Ewy, wskaźnik QBER zbiega się precyzyjnie wokół wartości **25%** (z uwzględnieniem dodatkowego szumu sprzętowego tła na poziomie ok. 2-4%, co daje odczyty rzędu 25-29%).
+* **Maksymalna Wiedza Asymptotyczna:** Przy 100% podsłuchu, wiedza Ewy o kluczu stabilizuje się na poziomie **~75%** (odczyty z symulacji w przedziale ~72-76%), co idealnie odzwierciedla matematyczne ograniczenia mechaniki kwantowej wynikające z twierdzenia o zakazie klonowania stanów kwantowych oraz statystycznego 50% ryzyka wyboru złej bazy pomiarowej przez hakera.
+* **Monogamia Splątania w BBM92:** Wykazano, że jakakolwiek próba dokonania pomiaru na kanale splątanym przez Ewę bezpowrotnie niszczy korelację EPR, co skutkuje natychmiastowym, drastycznym skokiem QBER u legalnych stron komunikacji i pozwala na natychmiastową detekcję obecności intruza.
 
 ## Zawartość Repozytorium
-* `Inf_kw_temat_2.ipynb` - Główny kod projektu (generowanie obwodów, symulacja, wysyłka zadań do IBM Quantum).
-* `Temat 2 QI.pdf` - Pełny raport z opisem teoretycznym i analizą wyników.
-* `Transpilacja_krotka_prezentacja_30min.pptx` - Prezentacja podsumowująca projekt.
+* `QKD_simulator_GC.ipynb` — Kompletny kod źródłowy symulatora w formie interaktywnego notatnika Jupyter Notebook (zawiera implementację klas QRNG, obwodów Qiskit, algorytmów klasycznych oraz generatory wykresów).
+* `Symulator QKD.pdf` — Oficjalny raport końcowy z projektu zawierający pełne opisy matematyczne, zrzuty ekranu z wynikami, tabele statystyczne oraz wykresy zależności QBER od poziomu infiltracji kanału.
+* `QNGFile.dat`, `QNGFile1.dat`, ... `QNGFile10.dat` — Pliki binarne z surowym ciągiem kwantowych danych losowych wykorzystywane jako fizyczne źródło entropii.
