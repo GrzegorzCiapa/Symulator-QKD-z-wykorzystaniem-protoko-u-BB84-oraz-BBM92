@@ -1,1 +1,1 @@
-# Symulator-QKD-z-wykorzystaniem-protoko-u-BB84-oraz-BBM92
+# Symulator QKD z wykorzystaniem protokołu BB84 oraz BBM92
