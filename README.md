@@ -50,4 +50,4 @@ Eksperymenty symulacyjne przeprowadzono w szerokim spektrum scenariuszy (zmienna
 ## Zawartość Repozytorium
 * `QKD_simulator_GC.ipynb` — Kompletny kod źródłowy symulatora w formie interaktywnego notatnika Jupyter Notebook (zawiera implementację klas QRNG, obwodów Qiskit, algorytmów klasycznych oraz generatory wykresów).
 * `Symulator QKD.pdf` — Oficjalny raport końcowy z projektu zawierający pełne opisy matematyczne, zrzuty ekranu z wynikami, tabele statystyczne oraz wykresy zależności QBER od poziomu infiltracji kanału.
-* `QNGFile.dat`, `QNGFile1.dat`, ... `QNGFile10.dat` — Pliki binarne z surowym ciągiem kwantowych danych losowych wykorzystywane jako fizyczne źródło entropii.
+* `QNGFile1.dat`, `QNGFile2.dat`, `QNGFile3.dat` — Pliki binarne z surowym ciągiem kwantowych danych losowych wykorzystywane jako fizyczne źródło entropii.
