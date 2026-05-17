@@ -21,7 +21,7 @@ Projekt został zrealizowany w architekturze modułowej, odzwierciedlającej rze
 
 2. **Przygotowanie i Kodowanie Stanów Kwantowych:**
    * **BB84:** Kodowanie pojedynczych kubitów w oparciu o pobrane bity wartości i baz. Wykorzystanie bramki logicznej NOT (`X`) do zmiany stanu $|0\rangle \rightarrow |1\rangle$ oraz bramki Hadamarda (`H`) do transformacji bazy prostoliniowej (Z) w diagonalną (X).
-   * **BBM92 (*):** Symulacja niezależnego źródła par fotonów splątanych w stanie Bella $|\Phi^+\rangle = \frac{1}{\sqrt{2}}(|00\rangle + |11\rangle)$ przy użyciu bramek Hadamarda (`H`) oraz kontrolowanej negacji (`CNOT`). Kubity są dystrybuowane niezależnie do Alicji i Boba.
+   * **BBM92:** Symulacja niezależnego źródła par fotonów splątanych w stanie Bella $|\Phi^+\rangle = \frac{1}{\sqrt{2}}(|00\rangle + |11\rangle)$ przy użyciu bramek Hadamarda (`H`) oraz kontrolowanej negacji (`CNOT`). Kubity są dystrybuowane niezależnie do Alicji i Boba.
 
 3. **Kanał Kwantowy z Podsłuchem (Ewa):**
    * Symulacja obecności aktywnego podsłuchiwacza przy użyciu strategii *Intercept-Resend* (Przechwyć-Wyślij Ponownie).
